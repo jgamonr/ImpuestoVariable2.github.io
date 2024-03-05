@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Calculadora de Boletos e Impuestos</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        th, td {
+            padding: 10px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+        th {
+            background-color: #800000; /* Guinda */
+            color: white;
+        }
+        td {
+            background-color: #fff5f5; /* Color claro */
+        }
+        .resaltado {
+            background-color: #ffcccc; /* Color para resaltar */
+        }
+        button {
+            background-color: #800000; /* Guinda */
+            color: white;
+            padding: 10px 20px;
+            margin: 10px 0;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #5a0000; /* Guinda oscuro */
+        }
+        .footer {
+            font-weight: bold;
+        }
+        input, select {
+            padding: 5px;
+            margin: 5px 0;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+    </style>
+</head>
+<body>
+
+<h2>Calculadora de Boletos</h2>
+<table id="tablaBoletos">
+    <thead>
+        <tr>
+            <th>#</th> <!-- Encabezado para el índice -->
+            <th>Cantidad de Boletos</th>
+            <th>Localidad</th>
+            <th>Precio Unitario</th>
+            <th>Total (MXN)</th>
+        </tr>
+    </thead>
+    <tbody>
+    </tbody>
+    <tfoot>
+        <tr class="footer">
+            <td colspan="2">Total boletos:</td>
+            <td id="totalBoletos">0</td>
+            <td>Promedio Precio:</td>
+            <td id="promedioPrecio">$0.00</td>
+            <td id="sumaTotales">$0.00</td>
+        </tr>
+    </tfoot>
+</table>
+<button onclick="agregarFila()">Agregar Fila</button>
+
+<h3>Datos Adicionales</h3>
+Número de Interventores: <input type="number" id="numInterventores"><br>
+Honorarios: <input type="number" id="honorarios"><br>
+Porcentaje de Impuesto a cobrar: <input type="number" id="porcentajeImpuesto"><br>
+<button onclick="calcularTotales()">Calcular Totales</button>
+
+<div id="resultados">
+    <h4>Honorarios Totales: <span id="honorariosTotales">$0.00</span></h4>
+    <h4>Impuesto: <span id="impuesto">$0.00</span></h4>
+    <h4>Total a Cobrar: <span id="totalACobrar">$0.00</span></h4>
+</div>
+
+<script>
+    function actualizarIndices() {
+        const rows = document.getElementById('tablaBoletos').getElementsByTagName('tbody')[0].rows;
+        for (let i = 0; i < rows.length; i++) {
+            rows[i].cells[0].innerHTML = i + 1; // Actualizar el índice
+        }
+    }
+
+    function agregarFila() {
+        const tbody = document.getElementById('tablaBoletos').getElementsByTagName('tbody')[0];
+        const row = tbody.insertRow();
+        row.onclick = function() { resaltarFila(this); }; // Agregar evento para resaltar la fila
+
+        let cellIndex = row.insertCell(0); // Celda para el índice
+        let cell1 = row.insertCell(1);
+        let cell2 = row.insertCell(2);
+        let cell3 = row.insertCell(3);
+        let cell4 = row.insertCell(4);
+
+        cellIndex.innerHTML = tbody.rows.length; // Asignar el número de fila
+        cell1.innerHTML = '<input type="number" value="1" min="1" oninput="calcularFila(this.parentElement.parentElement)">';
+        cell2.innerHTML = '<input type="text">';
+        cell3.innerHTML = '<input type="number" value="0" min="0" oninput="calcularFila(this.parentElement.parentElement)">';
+        cell4.innerHTML = '$0.00';
+
+        calcularFila(row);
+        actualizarIndices(); // Asegurar que los índices se actualicen cada vez que se agrega una fila
+    }
+
+    function resaltarFila(row) {
+        // Remover la clase de resaltado de todas las filas
+        const rows = document.getElementById('tablaBoletos').getElementsByTagName('tbody')[0].rows;
+        for (let i = 0; i < rows.length; i++) {
+            rows[i].classList.remove('resaltado');
+        }
+        // Agregar la clase de resaltado a la fila clickeada
+        row.classList.add('resaltado');
+    }
+
+    function calcularFila(row) {
+        let cantidad = row.cells[1].getElementsByTagName('input')[0].value;
+        let precio = row.cells[3].getElementsByTagName('input')[0].value;
+        let total = cantidad * precio;
+        row.cells[4].innerHTML = '$' + total.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+
+        actualizarTotales();
+    }
+
+    function actualizarTotales() {
+        let totalBoletos = 0;
+        let sumaTotales = 0;
+        let sumaPrecios = 0;
+        const rows = document.getElementById('tablaBoletos').getElementsByTagName('tbody')[0].rows;
+        for (let i = 0; i < rows.length; i++) {
+            totalBoletos += parseInt(rows[i].cells[1].getElementsByTagName('input')[0].value);
+            sumaTotales += parseFloat(rows[i].cells[4].innerHTML.replace(/\$/g, '').replace(/,/g, ''));
+            sumaPrecios += parseFloat(rows[i].cells[3].getElementsByTagName('input')[0].value);
+        }
+        let promedioPrecio = rows.length > 0 ? sumaPrecios / rows.length : 0;
+        document.getElementById('totalBoletos').innerHTML = totalBoletos + ' boletos';
+        document.getElementById('sumaTotales').innerHTML = '$' + sumaTotales.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        document.getElementById('promedioPrecio').innerHTML = '$' + promedioPrecio.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    }
+
+    function calcularTotales() {
+        let numInterventores = document.getElementById('numInterventores').value;
+        let honorarios = document.getElementById('honorarios').value;
+        let porcentajeImpuesto = document.getElementById('porcentajeImpuesto').value / 100;
+        let sumaTotales = parseFloat(document.getElementById('sumaTotales').innerHTML.replace(/\$/g, '').replace(/,/g, ''));
+
+        let honorariosTotales = numInterventores * honorarios;
+        let impuesto = sumaTotales * porcentajeImpuesto;
+        let totalACobrar = honorariosTotales + impuesto;
+
+        document.getElementById('honorariosTotales').innerHTML = '$' + honorariosTotales.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        document.getElementById('impuesto').innerHTML = '$' + impuesto.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        document.getElementById('totalACobrar').innerHTML = '$' + totalACobrar.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    }
+
+    // Inicializar con una fila
+    agregarFila();
+</script>
+</body>
+</html>
